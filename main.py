@@ -83,9 +83,13 @@ def creating_a_map(year, lat, lon, info_list, path_for_file):
 
     feature_group = folium.FeatureGroup(name='Useful information!')
 
-    feature_group.add_child(folium.Marker(location=[49.817545, 24.023932],
-                                          popup="Documents are here :-)",
-                                          icon=folium.Icon()))
+    feature_group.add_child(folium.CircleMarker(location=[49.817545, 24.023932],
+                                                 radius=10,
+                                                 popup="Documents are here :-)",
+                                                 fill_color='red',
+                                                 color='red',
+                                                 fill_opacity=0.5))
+
     fg_list.append(feature_group)
 
     for elem in fg_list:
