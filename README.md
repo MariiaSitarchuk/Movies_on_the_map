@@ -24,13 +24,15 @@
 
 Інші елементи:
 
-requirements.txt - текстовий файл з потрібними для роботи модуля бібліотеками python.
+  requirements.txt - текстовий файл з потрібними для роботи модуля бібліотеками python.
 
-short_location.list - текстовий файл з набором інйормації про фільми, роки їх зйомки, місце їх зйомки і т.д.
+  short_location.list - текстовий файл з набором інйормації про фільми, роки їх зйомки, місце їх зйомки і т.д.
 
-short_info.csv - новостворений csv-файл з відібраною інформацією з файлу short_location.list.
+  short_info.csv - новостворений csv-файл з відібраною інформацією з файлу short_location.list.
 
-cutting_info.py - програма, що відбирає потрібну інформацію з файлу short_location.list та записує її в новий файл short_info.csv.
+  cutting_info.py - програма, що відбирає потрібну інформацію з файлу short_location.list та записує її в новий файл short_info.csv.
+
+Помітка: також працює на великому файлі locations.list.
 
 
 Purpose of the module (main.py):
@@ -52,13 +54,15 @@ The user enters:
 
 Other items:
 
-requirements.txt - a text file with required python libraries to work with this module.
+  requirements.txt - a text file with required python libraries to work with this module.
 
-short_location.list - text file with a set of information about movies, years of their shooting, place of their shooting, etc.
+  short_location.list - text file with a set of information about movies, years of their shooting, place of their shooting, etc.
 
-short_info.csv - newly created csv file with information displayed from the short_location.list file.
+  short_info.csv - newly created csv file with information displayed from the short_location.list file.
 
-cutting_info.py - a program that extracts the necessary information from the file short_location.list and writes it to a new file short_info.csv.
+  cutting_info.py - a program that extracts the necessary information from the file short_location.list and writes it to a new file short_info.csv.
+
+Note: also works with big file locations.list.
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------
 
