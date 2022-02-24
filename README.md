@@ -72,5 +72,5 @@ Examples of module operation:
 
 User Input:
 
-python3 main.py 2016 49.83826 24.02324 short_location.list
+    python3 main.py 2016 49.83826 24.02324 short_location.list
 
