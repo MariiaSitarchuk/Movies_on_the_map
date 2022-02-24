@@ -14,8 +14,8 @@ def get_info_from_user():
                           4) path to file
                           5) country
     ---------------------------------------------------
-    >>> python main.py 2000 49.83826 24.02324 short_location.list
-    [2000, 49.83826, 24.02324, short_location.list, 'Ukraine']
+    >>> python3 main.py 2000 49.83826 24.02324 short_location.list
+    [2000, '49.83826', '24.02324', 'short_location.list', 'Ukraine']
     """
     import argparse
     import os
@@ -43,18 +43,20 @@ def get_info_from_user():
     info_lst = [args.year, args.latitude, args.longtitude, path_to_file]
 
     from geopy.geocoders import Nominatim
+    from deep_translator import GoogleTranslator
 
     geolocator = Nominatim(user_agent="myGeolocator")
-    coordinates = str(info_lst[1] + ", " + info_lst[2])
+    coordinates = str(info_lst[1]) + ", " + str(info_lst[2])
     location = geolocator.reverse(coordinates)
     all_address_dict = location.raw['address']
-    country = all_address_dict.get['country']
-    if country == 'United States of America':
-        country = 'USA'
-    elif country == 'United Kingdom':
-        country = 'UK'
+    country = all_address_dict.get('country')
+    translated_country = GoogleTranslator(source='auto', target='english').translate(country)
+    if translated_country == 'United States of America' or translated_country == 'United States' or translated_country == 'America':
+        translated_country = 'USA'
+    elif translated_country == 'United Kingdom':
+        translated_country = 'UK'
 
-    info_lst.append(country)
+    info_lst.append(translated_country)
 
     return info_lst
 
@@ -74,7 +76,15 @@ def creating_a_map(year, lat, lon, info_list):
     Return:
         nothing, but creates a html file with a map.
     ----------------------------------------------------------------------------
-    >>> creating_a_map(2000, 49.83826, 24.02324, info_list)
+    >>> creating_a_map(2016, 49.83826, 24.02324, [[[47.4979937, 19.0403594],\
+            [51.0834196, 10.4234469], [51.0, 10.0], [50.6402809, 4.6667145],\
+            [49.8941708, 2.2956951], [50.0118385, 2.1967768], [49.8390337, 2.1633769],\
+            [49.4300997, 2.0823355], [46.603354, 1.8883335], [54.7023545, -3.2765753]],\
+            ['"#VanLifeAttila"', '"1916"', '"#VanLifeAttila"', '"1916"', '"19.43"', '"19.43"',\
+            '"19.43"', '"19.43"', '"1916"', '"1916"'],\
+            ['Budapest, Hungary', 'Germany', 'Europe', 'Belgium',\
+            'Amiens, Somme, France', 'Vignacourt, Somme, France',\
+            'Creuse, Somme, France', 'Beauvais, Oise, France', 'France', 'UK']])
     
     """
     import folium
@@ -92,18 +102,32 @@ def creating_a_map(year, lat, lon, info_list):
     fg_list = []
     fg = folium.FeatureGroup(name='Map of ' + str(year))
 
-    #[список з координатами топ10; список з назвами фільмів топ10; список з назвами локації топ10]
+    #[ [координати топ10]; [назви фільмів топ10]; [назви локації топ10] ]
     #year = вказаний користувачем рік
-    for coordinates_lst, name, location in info_list[0], info_list[1], info_list[2]:
-        #coordinates_lst - [lat, lon]
-        # name - 'Title'
-        # location - 'Street, city, country'
-        iframe = folium.IFrame(html=html.format(location, name),
-                               width=300,
-                               height=100)
-        fg.add_child(folium.Marker(location=coordinates_lst,
-                                   popup=folium.Popup(iframe),
-                                   icon=folium.Icon(color = "red")))
+
+    coor_lst = info_list[0]
+    name_lst = info_list[1]
+    loc_lst = info_list[2]
+
+    for coor_pair in coor_lst:
+        for name in name_lst:
+            for loc in loc_lst:
+                #coor_pair (list)- [lat, lon]
+                # name - (str) 'Title'
+                # loc (str)- 'Street, City, Country'
+                iframe = folium.IFrame(html=html.format(loc, name),
+                                        width=300,
+                                        height=100)
+                fg.add_child(folium.Marker(location=coor_pair,
+                                           popup=folium.Popup(iframe),
+                                           icon=folium.Icon(color = "red")))
+                index_loc = loc_lst.index(loc)
+                loc_lst.pop(index_loc)
+                break
+            index_name = name_lst.index(name)
+            name_lst.pop(index_name)
+            break
+    
     fg_list.append(fg)
 
     feature_group = folium.FeatureGroup(name='Useful information!')
@@ -121,7 +145,8 @@ def creating_a_map(year, lat, lon, info_list):
         map.add_child(elem)
 
     map.add_child(folium.LayerControl())
-    map.save('Map_name.html')
+    map_name = 'Map_of_{}_year.html'.format(year)
+    map.save(map_name)
 
 def get_coordinates():
     """
@@ -171,7 +196,7 @@ def get_coordinates():
             coordinates = None
         coordinates_lst.append(coordinates)
 
-    without_dupl.insert(loc=-1, column="coordinates", value=coordinates_lst)
+    without_dupl.loc[:, "coordinates"] = coordinates_lst
 
     return without_dupl
 
@@ -190,7 +215,8 @@ def find_nearest(data_frame, user_lat, user_lon):
         the_lst (list) - list with information (about the 10 nearest places),
                   which will be used to create the map.
     the_lst = [ [coordinates1, coordinates2 ... coordinates10],\
-                [name1, name2 ... name10], [loc1, loc2 ... loc10] ]
+                [name1, name2 ... name10],\
+                [loc1, loc2 ... loc10] ]
     """
     def find_distance(place_coor, lat, lon):
         """
@@ -225,7 +251,7 @@ def find_nearest(data_frame, user_lat, user_lon):
             distance = None
         dist_lst.append(distance)
 
-    data_frame.insert(loc=-1, column="dist", value=dist_lst)
+    data_frame["dist"] = dist_lst
 
     #---------------------------------------------------------------------------------------------
     import pandas as pd
@@ -242,28 +268,27 @@ def find_nearest(data_frame, user_lat, user_lon):
                 loc_lst.append(row["loc"])
                 coor_lst.append(row["coordinates"])
         data_frame.loc[(data_frame.dist == data_frame.dist.min()), 'dist'] = None
-    the_lst.append(coor_lst, name_lst, loc_lst)
+    the_lst.append(coor_lst)
+    the_lst.append(name_lst)
+    the_lst.append(loc_lst)
 
     return the_lst
 
-
-def cutting_info(path_of_file, user_country, user_year):
+def kinder_cutting_info(path_of_file, user_year):
     """
-    Cuts information in file with data.
+    Cuts information in file with data, but kinder)))).
     -------------------------------------------------------------
     Argument:
         path_of_file (str) - the path to file with data.
-        user_country (str) - the country, in which 
-                             user is searching movies.
         user_year (int) - the year, in which 
                           user is searching movies.
     -------------------------------------------------------------
     Return:
         nothing, but creates a csv file with cutted information.
     -------------------------------------------------------------
-    >>> cutting_info(short_location.list, 'USA', 2014)
+    >>> kinder_cutting_info('short_location.list', 2014)
 
-    >>> cutting_info(locations.list, 'Canada', 2016)
+    >>> kinder_cutting_info('locations.list', 2016)
 
     """
     with open(path_of_file, encoding="utf-8", errors='ignore') as file:
@@ -289,15 +314,15 @@ def cutting_info(path_of_file, user_country, user_year):
             else:
                 loc = for_loc[-2]
 
-            loc_list = loc.split()
+            loc_list = loc.split(',')
             country = loc_list[-1]
 
-            if year == user_year and country == user_country:
+            if year == user_year:
                 line_lst = [name, year, loc, country]
                 info_list.append(line_lst)
             else:
                 do = "absolutely nothing"
-
+    
     info_list.insert(0, ["name", "year", "loc", "country"])
 
     import csv
@@ -306,9 +331,72 @@ def cutting_info(path_of_file, user_country, user_year):
         writer = csv.writer(file)
         writer.writerows(info_list)
 
-if __name__ == "__main__":
+def cutting_info(path_of_file, user_country, user_year):
     """
+    Cuts information in file with data.
+    -------------------------------------------------------------
+    Argument:
+        path_of_file (str) - the path to file with data.
+        user_country (str) - the country, in which 
+                             user is searching movies.
+        user_year (int) - the year, in which 
+                          user is searching movies.
+    -------------------------------------------------------------
+    Return:
+        nothing, but creates a csv file with cutted information.
+    -------------------------------------------------------------
+    >>> cutting_info('short_location.list', 'USA', 2014)
+
+    >>> cutting_info('locations.list', 'Canada', 2016)
+
+    """
+    with open(path_of_file, encoding="utf-8", errors='ignore') as file:
+        info_list = []
+        for line in file:
+            film_info = line.strip().split("/t")
+            film = film_info[0].split()[:-1]
+            for elem in film:
+                if elem[0] == "(" and elem[-1] == ")":
+                    try:
+                        year = int(elem[1:-1])
+                        year_index = film.index(elem)
+                        break
+                    except ValueError:
+                        do ="nothing"
+            name_lst = film[:year_index]
+            name = " ".join(name_lst)
+
+            for_loc = line.strip().split("\t")
+
+            if for_loc[-1][0] != "(" and for_loc[-1][-1] != ")":
+                loc = for_loc[-1]
+            else:
+                loc = for_loc[-2]
+
+            loc_list = loc.split(',')
+            country = loc_list[-1]
+
+            if year == user_year and country == user_country:
+                line_lst = [name, year, loc, country]
+                info_list.append(line_lst)
+            else:
+                do = "absolutely nothing"
+
+    if len(info_list) < 10:
+        kinder_cutting_info(path_of_file, user_year)
+    else:
+        info_list.insert(0, ["name", "year", "loc", "country"])
+
+        import csv
+ 
+        with open("cutted_info.csv", "w", newline="") as file:
+            writer = csv.writer(file)
+            writer.writerows(info_list)
+
+if __name__ == "__main__":
+
     info_lst = get_info_from_user()
+    print("Info_lst: ", info_lst)
 
     year = info_lst[0]
     lat = float(info_lst[1])
@@ -321,25 +409,13 @@ if __name__ == "__main__":
     data_frame_with_coordinates = get_coordinates()
 
     info_list = find_nearest(data_frame_with_coordinates, lat, lon)
+    print("Info_list: ", info_list)
 
     creating_a_map(year, lat, lon, info_list)
     """
 
     import doctest
     doctest.testmod()
+    """
+    
 
-
-"""
-def custom_geocoder(address):
-        import geopy
-        from geopy.geocoders import Nominatim
-        from geopandas.tools import geocode
-
-        dataframe = geocode(address , provider="nominatim" , user_agent = 'my_request') 
-        point = dataframe.geometry.iloc[0] 
-        return pd.Series({'Latitude': point.y, 'Longitude': point.x}) 
-        #Applying function to the dataframe 
-        #a_dataframe.insert(loc=1, column="B", value=[4, 5, 6])
-
-without_dupl[['latitude' , 'longitude']] = without_dupl.loc.apply( lambda x: custom_geocoder(x))
-"""
