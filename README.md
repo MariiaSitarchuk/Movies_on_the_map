@@ -72,5 +72,13 @@ Examples of module operation:
 
 User Input:
 
-    python3 main.py 2016 49.83826 24.02324 short_location.list
+    python3 main.py <your_year> <latitude> <longtitude> <path_to_database>
+
+Program Output:
+
+Nothing, but creates a html file with a map.
+
+Named:  Map_of_<your_year>_year.html
+
+Examples of created maps you can find in folder 'Images'.
 
